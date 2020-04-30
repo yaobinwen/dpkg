@@ -20,14 +20,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# NOTE(ywen): `strict` and `warnings` are pragmas.
 use strict;
 use warnings;
 
+# >>> NOTE(ywen)
+# This is the `use Module LIST` form. Similar to `from File.Temp import tempdir`
+# in Python.
+#
+# `qw` stands for "quote word" is used to extract each element of the given
+# string as it is in an array of elements in single-quote ('').
+# <<<
 use File::Temp qw(tempdir);
+
+# NOTE(ywen): Similar to `import File.Basename` in Python.
 use File::Basename;
 use File::Copy;
 use POSIX qw(:sys_wait_h);
 
+# >>> NOTE(ywen)
+# `Dpkg` is the perl module defined in this directory. See the `Dpkg`
+# sub-directory.
+# <<<
 use Dpkg ();
 use Dpkg::Gettext;
 use Dpkg::ErrorHandling;
@@ -46,9 +60,15 @@ use Dpkg::Path qw(find_command);
 use Dpkg::IPC;
 use Dpkg::Vendor qw(run_vendor_hook);
 
+# NOTE(ywen): `textdomain` is defined in `Dpkg::Gettext` package.
 textdomain('dpkg-dev');
 
+# >>> NOTE(ywen)
+# `sub` defines a subroutine.
+# See: https://perldoc.perl.org/5.30.0//functions/sub.html
+# <<<
 sub showversion {
+    # NOTE(ywen): `g_` is defined in `Dpkg::Gettext` package.
     printf g_("Debian %s version %s.\n"), $Dpkg::PROGNAME, $Dpkg::PROGVERSION;
 
     print g_('
@@ -145,6 +165,22 @@ sub usage {
 '), $Dpkg::PROGNAME;
 }
 
+# >>> NOTE(ywen)
+# A `my` "declares the listed variables to be local (lexically) to the
+# enclosing block, file, or `eval`".
+# See: https://perldoc.perl.org/5.30.0//functions/my.html
+#
+# Perl variables
+# See: https://perldoc.perl.org/5.30.0/perlvar.html
+# Specifically:
+#   - $ is for scalars as '$' looks like the letter 's'. Note it can be not
+#       only numeric values but also other types, such as a string.
+#       - See: https://www.tutorialspoint.com/perl/perl_scalars.htm
+#   - @ is for arrays as '@' looks like the letter 'a'.
+#       - See: https://www.tutorialspoint.com/perl/perl_arrays.htm
+#   - % is for hashes as '%' looks like a key-value pair.
+#       - See: https://www.tutorialspoint.com/perl/perl_hashes.htm
+# <<<
 my $admindir;
 my @debian_rules = ('debian/rules');
 my @rootcommand = ();
@@ -157,6 +193,14 @@ my $parallel_force = 0;
 my $checkbuilddep = 1;
 my $check_builtin_builddep = 1;
 my @source_opts;
+
+# >>> NOTE(ywen): `ENV` is a hash that contains the current environment.
+# See: https://perldoc.perl.org/5.30.0/perlvar.html
+#
+# The expression `$ENV{key}` reads the value of the key in the hash variable.
+# Therefore, `$ENV{DEB_CHECK_COMMAND}` returns the value of the environment
+# variable `DEB_CHECK_COMMAND`.
+# <<<
 my $check_command = $ENV{DEB_CHECK_COMMAND};
 my @check_opts;
 my $signpause;
@@ -182,6 +226,16 @@ my $changedby;
 my $desc;
 my @buildinfo_opts;
 my @changes_opts;
+
+# >>> NOTE(ywen)
+# `$_` is the default input.
+# See: https://perldoc.perl.org/5.30.0/perlvar.html
+#
+# `map` has two forms: `map BLOCK LIST` and `map EXPR,LIST`. It "evaluates the
+# BLOCK or EXPR for each element of LIST (locally setting $_ to each element)
+# and composes a list of the results of each such evaluation."
+# See: https://perldoc.perl.org/5.30.0/functions/map.html
+# <<<
 my %target_legacy_root = map { $_ => 1 } qw(
     clean binary binary-arch binary-indep
 );
@@ -192,17 +246,49 @@ my @hook_names = qw(
     init preclean source build binary buildinfo changes postclean check sign done
 );
 my %hook;
+
+# >>> NOTE(ywen)
+# `undef` is similar to `None` in Python or `undefined` in JS.
+# See: https://perldoc.perl.org/5.30.0//functions/undef.html
+#
+# `foreach` is explained in `Compound Statements`.
+# See: https://perldoc.perl.org/5.30.0//perlsyn.html#Compound-Statements
+#
+# The following statement is similar to the block:
+# ```python
+# for hname in hook_names:
+#    hook[hname] = undef
+# ```
+# It initializes the hash `hook` with keys from `hook_names` and values being
+# `undef`.
+# <<<
 $hook{$_} = undef foreach @hook_names;
 
-
+# >>> NOTE(ywen)
+# See arrow operator `->` calls a subroutine. In the following statement,
+# `Conf` is a package, `new` is a subroutine inside `Conf`.
+# See: https://perldoc.perl.org/5.30.0/perlop.html (The Arrow Operator)
+#
+# To understand `Conf`, one needs to read about OOP in Perl.
+# See: https://perldoc.perl.org/5.30.0/perlobj.html
+# <<<
 my $conf = Dpkg::Conf->new();
 $conf->load_config('buildpackage.conf');
 
+# >>> NOTE(ywen)
+# `unshift` "prepends list to the front of the array and returns the new number
+# of elements in the array."
+# See: https://perldoc.perl.org/5.30.0//functions/unshift.html
+# <<<
 # Inject config options for command-line parser.
 unshift @ARGV, @{$conf};
 
 my $build_opts = Dpkg::BuildOptions->new();
 
+# >>> NOTE(ywen)
+# For all the available build options, see
+# https://www.debian.org/doc/debian-policy/ch-source.html#debian-rules-and-deb-build-options
+# <<<
 if ($build_opts->has('nocheck')) {
     $check_command = undef;
 } elsif (not find_command($check_command)) {
