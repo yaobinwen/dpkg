@@ -295,21 +295,44 @@ if ($build_opts->has('nocheck')) {
     $check_command = undef;
 }
 
+# >>> NOTE(ywen)
+# @ARGV is the array that has all the CLI input arguments. For example, if the
+# script is called this way:
+#   `dpkg-buildpackage --arg1 --arg2 -b arg3 arg4 -c --arg5`
+# then `@ARGV` will be `(--arg1,--arg2,-b,arg3,arg4,-c,--arg5)`.
+# See `perl-demo`.
+# <<<
 while (@ARGV) {
+    # >>> NOTE(ywen)
+    # `shift` "shifts the first value of the array off and returns it".
+    # See: https://perldoc.perl.org/functions/shift.html
+    #
+    # `$_`, or `$ARG`, is the "default input and pattern-searching space".
+    # It is assigned with a value for the uses of the pattern-searchings in the
+    # subsequent `if` statements. If this `$_` is removed, errors of
+    # "Use of uninitialized value $_ in pattern match (m//)" will be reported.
+    # See: https://perldoc.perl.org/5.30.0/perlvar.html
+    # <<<
     $_ = shift @ARGV;
 
     if (/^(?:--help|-\?)$/) {
-	usage;
-	exit 0;
+        usage;
+        exit 0;
     } elsif (/^--version$/) {
-	showversion;
-	exit 0;
+        showversion;
+        exit 0;
     } elsif (/^--admindir$/) {
+        # NOTE(ywen): The next argument is supposed to be the admin directory.
         $admindir = shift @ARGV;
     } elsif (/^--admindir=(.*)$/) {
-	$admindir = $1;
+        # >>> NOTE(ywen)
+        # `$1` refers to the first matching group in the regular expression,
+        # which here is the path of the admin directory.
+        # See: https://perldoc.perl.org/5.30.0/perlvar.html#Variables-related-to-regular-expressions
+        # <<<
+        $admindir = $1;
     } elsif (/^--source-option=(.*)$/) {
-	push @source_opts, $1;
+        push @source_opts, $1;
     } elsif (/^--buildinfo-option=(.*)$/) {
 	push @buildinfo_opts, $1;
     } elsif (/^--changes-option=(.*)$/) {
@@ -611,6 +634,9 @@ if (not -x 'debian/rules') {
     chmod(0755, 'debian/rules'); # No checks of failures, non fatal
 }
 
+# >>> NOTE(ywen)
+# `scalar @call_target` returns the number of elements in the array.
+# <<<
 if (scalar @call_target == 0) {
     run_cmd('dpkg-source', @source_opts, '--before-build', '.');
 }
