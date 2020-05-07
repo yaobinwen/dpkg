@@ -20,6 +20,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# >>> NOTE(ywen)
+# See the manpage:
+# # See: https://manpages.debian.org/jessie/dpkg-dev/dpkg-buildpackage.1.en.html
+# <<<
+
 # NOTE(ywen): `strict` and `warnings` are pragmas.
 use strict;
 use warnings;
@@ -332,24 +337,52 @@ while (@ARGV) {
         # <<<
         $admindir = $1;
     } elsif (/^--source-option=(.*)$/) {
+        # >>> NOTE(ywen)
+        # Because the argument parsing happens within a while loop, and
+        # @source_opts is an array, it is possible to provide multiple
+        # instances of this argument on the CLI.
+        # Note the option name is "option", a singular noun, which suggests
+        # that you can provide multiple instances of it.
+        # <<<
         push @source_opts, $1;
     } elsif (/^--buildinfo-option=(.*)$/) {
-	push @buildinfo_opts, $1;
+        # NOTE(ywen): See `--source-option`.
+        push @buildinfo_opts, $1;
     } elsif (/^--changes-option=(.*)$/) {
-	push @changes_opts, $1;
+        # NOTE(ywen): See `--source-option`.
+        push @changes_opts, $1;
     } elsif (/^(?:-j|--jobs=)(\d*|auto)$/) {
-	$parallel = $1 || '';
-	$parallel_force = 1;
+        # >>> NOTE(ywen)
+        # `(?:)` is a non-capturing group so `$1` doesn't refer to it.
+        # Only such arguments as `-j10`, `-jauto`, `--jobs=1`, and `--jobs=auto`
+        # will be parsed. If the value of `--jobs` is not numeric, this option
+        # is ignored.
+        # <<<
+        $parallel = $1 || '';
+        $parallel_force = 1;
     } elsif (/^(?:-J|--jobs-try=)(\d*|auto)$/) {
-	$parallel = $1 || '';
-	$parallel_force = 0;
+        # NOTE(ywen): See `--jobs`.
+        $parallel = $1 || '';
+        $parallel_force = 0;
     } elsif (/^(?:-r|--root-command=)(.*)$/) {
-	my $arg = $1;
-	@rootcommand = split ' ', $arg;
+        # >>> NOTE(ywen)
+        # The command that's used to gain root privilege. By default, `fakeroot`
+        # is used.
+        #
+        # This option's value must be quoted by single/double quotation marks
+        # and space-separated.
+        #
+        # Interestingly, `--check-command` takes a command line as its input,
+        # too, but it doesn't split it, while `--root-command` does.
+        # <<<
+        my $arg = $1;
+        @rootcommand = split ' ', $arg;
     } elsif (/^--check-command=(.*)$/) {
-	$check_command = $1;
+        # NOTE(ywen): See `--root-command`.
+        $check_command = $1;
     } elsif (/^--check-option=(.*)$/) {
-	push @check_opts, $1;
+        # NOTE(ywen): See `--source-option`.
+        push @check_opts, $1;
     } elsif (/^--hook-([^=]+)=(.*)$/) {
 	my ($hook_name, $hook_cmd) = ($1, $2);
 	usageerr(g_('unknown hook name %s'), $hook_name)
