@@ -5,6 +5,9 @@ use warnings;
 
 my @call_target = ();
 my $admindir;
+my $parallel;
+my $parallel_force = 0;
+my @rootcommand = ();
 my @source_opts;
 
 sub usage {
@@ -34,6 +37,12 @@ while (@ARGV) {
         $admindir = $1;
     } elsif (/^--source-option=(.*)$/) {
         push @source_opts, $1;
+    } elsif (/^(?:-j|--jobs=)(\d*|auto)$/) {
+        $parallel = $1 || '';
+        $parallel_force = 1;
+    } elsif (/^(?:-r|--root-command=)(.*)$/) {
+        my $arg = $1;
+        @rootcommand = split ' ', $arg;
     }
 };
 
@@ -41,3 +50,6 @@ print "----------", "\n";
 print "CLI arguments are:", "\n";
 print "\$admindir = ", $admindir, "\n";
 print "\@source_opts = ", join(',', @source_opts), " (size: ", scalar @source_opts, ")", "\n";
+print "\$parallel = ", $parallel, "\n";
+print "\$parallel_force = ", $parallel_force, "\n";
+print "\@rootcommand = ", join(',', @rootcommand), "\n";
