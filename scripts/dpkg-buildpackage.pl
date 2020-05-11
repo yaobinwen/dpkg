@@ -384,12 +384,30 @@ while (@ARGV) {
         # NOTE(ywen): See `--source-option`.
         push @check_opts, $1;
     } elsif (/^--hook-([^=]+)=(.*)$/) {
-	my ($hook_name, $hook_cmd) = ($1, $2);
-	usageerr(g_('unknown hook name %s'), $hook_name)
-	    if not exists $hook{$hook_name};
-	usageerr(g_('missing hook %s command'), $hook_name)
-	    if not defined $hook_cmd;
-	$hook{$hook_name} = $hook_cmd;
+        # >>> NOTE(ywen)
+        # `usageerr` is defined in `Dpkg::ErrorHandling` module.
+        #
+        # `statement if condition;` is another form of `if condition { statement };`.
+        #
+        # The function `exists` "returns true if the specified element in the
+        # hash has ever been initialized, even if the corresponding value is
+        # undefined".
+        # See: https://perldoc.perl.org/5.30.0//functions/exists.html
+        #
+        # The function `defined` "Returns a Boolean value telling whether EXPR
+        # has a value other than the undefined value undef. If EXPR is not
+        # present, $_ is checked."
+        # See: https://perldoc.perl.org/5.30.0//functions/defined.html
+        #
+        # `$hook` was initialized earlier by iterating through `$hook_name`.
+        # The initial values are `undef`.
+        # <<<
+        my ($hook_name, $hook_cmd) = ($1, $2);
+        usageerr(g_('unknown hook name %s'), $hook_name)
+            if not exists $hook{$hook_name};
+        usageerr(g_('missing hook %s command'), $hook_name)
+            if not defined $hook_cmd;
+        $hook{$hook_name} = $hook_cmd;
     } elsif (/^--buildinfo-id=.*$/) {
 	# Deprecated option
 	warning('--buildinfo-id is deprecated, it is without effect');
