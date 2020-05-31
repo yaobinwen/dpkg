@@ -3,8 +3,8 @@
 use strict;
 use warnings;
 
-my @call_target = ();
 my $admindir;
+my @call_target = ();
 my $parallel;
 my $parallel_force = 0;
 my @rootcommand = ();
@@ -43,6 +43,11 @@ while (@ARGV) {
     } elsif (/^(?:-r|--root-command=)(.*)$/) {
         my $arg = $1;
         @rootcommand = split ' ', $arg;
+    } elsif (/^(?:--target|--rules-target|-T)$/) {
+        push @call_target, split /,/, shift @ARGV;
+    } elsif (/^(?:--target=|--rules-target=|-T)(.+)$/) {
+        my $arg = $1;
+        push @call_target, split /,/, $arg;
     }
 };
 
@@ -53,3 +58,4 @@ print "\@source_opts = ", join(',', @source_opts), " (size: ", scalar @source_op
 print "\$parallel = ", $parallel, "\n";
 print "\$parallel_force = ", $parallel_force, "\n";
 print "\@rootcommand = ", join(',', @rootcommand), "\n";
+print "\@call_target = ", join(',', @call_target), "\n";

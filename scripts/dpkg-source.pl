@@ -82,6 +82,16 @@ my $diff_ignore_regex = get_default_diff_ignore_regex();
 
 my @options;
 my @cmdline_options;
+
+# >>> NOTE(ywen)
+# This while loop figures out what command should be executed, and sets the
+# "option mode" accordingly (`setopmode`). My understanding of "option mode" is
+# the subset of all the possible options that works with the current command.
+# Therefore, an option that's not working for the current command would result
+# in error reporting.
+#
+# Only one command can be specified in one run of this script. See `setopmode`.
+# <<<
 while (@ARGV && $ARGV[0] =~ m/^-/) {
     my $arg = shift @ARGV;
 
@@ -224,6 +234,7 @@ unless (defined($options{opmode})) {
     usageerr(g_('need an action option'));
 }
 
+# NOTE(ywen): This `if` block actually runs the task.
 if ($options{opmode} =~ /^(build|print-format|(before|after)-build|commit)$/) {
 
     $options{ARGV} = \@ARGV;
@@ -255,6 +266,24 @@ if ($options{opmode} =~ /^(build|print-format|(before|after)-build|commit)$/) {
 
     my $srcpkg = Dpkg::Source::Package->new(format => $build_format,
                                             options => \%options);
+
+    # >>> NOTE(ywen)
+    # Pay attention to the syntax here.
+    # The use of `->` shows that `srcpkg` is a hash reference, and
+    # `$srcpkg->{fields}` is accessing the value of the hash key "fields" in
+    # the hash that is being referenced to by `srcpkg`. This syntax is talked
+    # about here:
+    # https://gist.github.com/yaobinwen/7ecf765e9600e4886b547724b47c65f4#hash-references
+    #
+    # For more details about references, see:
+    # - https://perldoc.perl.org/perlref.html for a complete documentation.
+    # - https://perldoc.perl.org/perlreftut.html for a short tutorial.
+    #
+    # But the use of curly braces `{}` has nothing to do with references. It's
+    # the normal way of accessing a hash value. See the same link above.
+    #
+    # `fields` is defined in `Dpkg::Source::Package.pm`. See its `sub new`.
+    # <<<
     my $fields = $srcpkg->{fields};
 
     $srcpkg->parse_cmdline_options(@cmdline_options);
@@ -405,6 +434,9 @@ if ($options{opmode} =~ /^(build|print-format|(before|after)-build|commit)$/) {
     if (length($fields->{'Binary'}) > 980) {
 	$fields->{'Binary'} =~ s/(.{0,980}), ?/$1,\n/g;
     }
+
+    # NOTE(ywen): The information preparation is finished. Now do what the
+    # command requires.
 
     if ($options{opmode} eq 'print-format') {
 	print $fields->{'Format'} . "\n";
