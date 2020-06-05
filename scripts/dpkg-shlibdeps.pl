@@ -287,6 +287,15 @@ foreach my $file (keys %exec) {
 	    } else {
 		# No symbol file found, fall back to standard shlibs
                 debug(1, "Using shlibs+objdump for $soname (file $lib)");
+                # >>> NOTE(ywen)
+                # "//" is the "Logical Defined-Or" operator.
+                # See: https://perldoc.perl.org/5.30.0/perlop.html
+                # `EXPR1 // EXPR2` means "if EXPR1 is defined, use its value,
+                # otherwise use EXPR2".
+                # "//=" is the combination of "//" and "=", so `EXPR1 //= EXPR2`
+                # means "if EXPR1 is defined, then assign EXPR1 to EXPR1,
+                # otherwise assign EXPR2 to EXPR1".
+                # <<<
                 $objdump_cache{$lib} //= Dpkg::Shlibs::Objdump::Object->new($lib);
                 my $libobj = $objdump_cache{$lib};
                 my $id = $dumplibs_wo_symfile->add_object($libobj);
